@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -13,14 +14,39 @@ namespace FileTree
         public bool HasSubFolders { get { return this.SubFolders.Count > 0; } }
         public IEnumerable<string> Files { get; set; }
         public bool HasFiles { get { return this.Files != null && this.Files.Any(); } }
+        public Folder ParentFolder
+        {
+            get
+            {
+                DirectoryInfo parentDirectoryInfo = new DirectoryInfo(this.Path).Parent;
+                return parentDirectoryInfo != null ? new Folder(parentDirectoryInfo.FullName) : null;
+            }
+        }
 
         public Folder(string folderPath)
         {
             if (!Directory.Exists(folderPath))
                 throw new DirectoryNotFoundException(string.Format("The directory was not found: {0}", folderPath));
             this.Path = folderPath;
-            this.Files = Directory.GetFiles(this.Path);
-            IEnumerable<string> subFolders = Directory.GetDirectories(this.Path);
+
+            try
+            {
+                this.Files = Directory.GetFiles(this.Path);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Ignore
+            }
+
+            IEnumerable<string> subFolders = null;
+            try
+            {
+                subFolders = Directory.GetDirectories(this.Path);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Ignore
+            }
             if (subFolders != null)
             {
                 this.SubFolders = new List<Folder>();

@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using FileTree;
 using System.IO;
 using System.Xml;
+using System.Linq;
 
 namespace Tests
 {
@@ -51,6 +52,33 @@ namespace Tests
                     Assert.Fail("Folder is not: Subfolder1 or Subfolder2");
                 }
             }
+        }
+
+        [TestMethod]
+        public void CanGetParent()
+        {
+            Folder rootFolder = new Folder(this.RootfolderPath);
+            Folder parentFolder = rootFolder.ParentFolder;
+            Assert.IsNotNull(parentFolder);
+            Assert.IsTrue(parentFolder.HasSubFolders);
+            Assert.IsTrue(parentFolder.Name == "FileTree");
+            Assert.IsNotNull(parentFolder.SubFolders.Where(x => x.Path == this.RootfolderPath).SingleOrDefault());
+
+            string tempDirPath = @"C:\filetreetempdir";
+            if (!Directory.Exists(tempDirPath))
+                Directory.CreateDirectory(tempDirPath);
+            Folder tempDir = new Folder(tempDirPath);
+            Folder driveDir = tempDir.ParentFolder;
+            if (Directory.Exists(tempDirPath))
+                Directory.Delete(tempDirPath);
+        }
+
+        [TestMethod]
+        public void CanGetDriveDir()
+        {
+            string driveDirPath = @"C:\";
+            Folder driveDir = new Folder(driveDirPath);
+            Assert.IsNull(driveDir.ParentFolder);
         }
     }
 }
